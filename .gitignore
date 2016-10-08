@@ -13,6 +13,9 @@ bin/*
 .project
 .settings
 
+# Gradle
+.gradle
+build
 
 private/*
 /bin/
