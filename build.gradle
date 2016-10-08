@@ -1,0 +1,85 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'application'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+version = '1.0'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile ('org.twitter4j:twitter4j-core:4.0.4') {transitive = false}
+	compile ('org.twitter4j:twitter4j-async:4.0.4') {transitive = false}
+	compile ('org.twitter4j:twitter4j-stream:4.0.4') {transitive = false}
+	compile ('org.apache.logging.log4j:log4j-core:2.0.1') {transitive = false}
+	compile ('org.apache.logging.log4j:log4j-api:2.0.1') {transitive = false}
+	compile ('org.apache.logging.log4j:log4j-slf4j-impl:2.0.1') {transitive = false}
+	compile ('org.slf4j:slf4j-api:1.7.7') {transitive = false}
+	compile ('com.fasterxml.jackson.core:jackson-core:2.8.3') {transitive = false}
+	compile ('com.fasterxml.jackson.core:jackson-databind:2.8.3') {transitive = false}
+	compile ('com.fasterxml.jackson.core:jackson-annotations:2.8.3') {transitive = false}
+	compile ('com.h2database:h2:1.4.192') {transitive = false}
+	compile ('org.apache.commons:commons-lang3:3.4') {transitive = false}
+	
+//	testCompile 'org.spockframework:spock-maven:0.7-groovy-2.0'
+//	testCompile 'junit:junit:4.11'
+}
+
+def defaultEncoding = 'UTF-8'
+tasks.withType(AbstractCompile) each { it.options.encoding = defaultEncoding }
+
+// 作成したjarをプロジェクトルート直下にバージョン番号無しで作成する
+task rename(type: Copy) {
+	from 'build/libs/'
+	into "$projectDir"
+
+	rename { String fileName ->
+		fileName.replace('-' + version, '')
+	}
+}
+
+// fat jar用の設定
+jar {
+	baseName = 'maki'
+	
+	from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+	manifest {
+		attributes (
+			'Implementation-Title': 'mandala-analyze-twitter',
+			'Implementation-Version': version,
+			'Main-Class' : 'akb428.maki.SearchMain'
+		)
+	}
+}
+
+jar.doLast {
+    tasks.rename.execute()
+}
+
+// application用の設定
+mainClassName = 'akb428.maki.SearchMain'
+
+applicationDistribution.from("conf") {
+	into "conf"
+}
+applicationDistribution.from("logs") {
+	into "logs"
+}
+
+run {
+	if (project.hasProperty('args')) {
+		args project.args.split('\\s+')
+	}
+}
+
+startScripts {
+	applicationName = 'maki'
+}
+
+distZip {
+	baseName = 'mandala-analyze-twitter'
+}
