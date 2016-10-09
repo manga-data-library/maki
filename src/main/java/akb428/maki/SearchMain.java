@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.util.*;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -26,6 +28,8 @@ import akb428.maki.thread.MediaDownloderThread;
 import akb428.util.Calender;
 
 public class SearchMain {
+
+    private static Logger logger = LoggerFactory.getLogger(SearchMain.class);
 
     public static void main(String[] args) throws ClassNotFoundException,
             JsonParseException, JsonMappingException, IOException, SQLException {
@@ -78,7 +82,7 @@ public class SearchMain {
         ArrayList<String> track = new ArrayList<String>();
         track.addAll(Arrays.asList(Application.searchKeyword.split(",")));
 
-        System.out.println((Application.searchKeyword.split(",")).length);
+        logger.info("number of search keywords:" + (Application.searchKeyword.split(",")).length);
 
         String[] trackArray = track.toArray(new String[track.size()]);
 
@@ -99,6 +103,8 @@ public class SearchMain {
 }
 
 class MyStatusAdapter extends StatusAdapter {
+
+    private static Logger logger = LoggerFactory.getLogger(MyStatusAdapter.class);
 
     HbaseConfModel hbaseConfModel;
     MediaConfModel mediaConfModel;
@@ -129,22 +135,14 @@ class MyStatusAdapter extends StatusAdapter {
 
     public void onStatus(Status status) {
 
-        //System.out.println("@" + status.getUser().getScreenName() );
-
 		/*
 		if (status.getGeoLocation() != null) {
 			System.out.print(String.valueOf(status.getGeoLocation().getLatitude()));
 			System.out.print(" ");
 			System.out.print(String.valueOf(status.getGeoLocation().getLongitude()));
 		}*/
-        System.out.println("  @" + status.getUser().getScreenName());
-
-        //System.out.println(status.getId());
-        System.out.println(status.getText());
-        //System.out.println(status.getSource());
-        //System.out.println(status.getRetweetCount());
-        //System.out.println(status.getFavoriteCount());
-        //System.out.println(status.getCreatedAt());
+        logger.info("  @" + status.getUser().getScreenName());
+        logger.info(status.getText());
 
 		/*
 		if (hbaseConfModel.isExecute()) {
@@ -171,7 +169,7 @@ class MyStatusAdapter extends StatusAdapter {
                 newBuffer();
             }
             catch (Exception e){
-                System.out.println(e.toString());
+            	logger.error(e.getMessage(), e);
             }
         }
 
@@ -215,8 +213,7 @@ class MyStatusAdapter extends StatusAdapter {
 
             bufferedWriter.newLine();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
 
     }
@@ -228,11 +225,11 @@ class MyStatusAdapter extends StatusAdapter {
         MediaEntity[] arrMedia = status.getMediaEntities();
 
         if (arrMedia.length > 0) {
-            System.out.println("メディアURLが見つかりました");
+            logger.info("メディアURLが見つかりました");
         }
         for (MediaEntity media : arrMedia) {
             // http://kikutaro777.hatenablog.com/entry/2014/01/26/110350
-            System.out.println(media.getMediaURL());
+            logger.info(media.getMediaURL());
 
             if (!dao.isExistUrl(media.getMediaURL())) {
                 // TODO keywordを保存したいがここでは取得できないため一時的にtextをそのまま保存
